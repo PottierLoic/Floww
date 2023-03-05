@@ -1,2 +1,2 @@
 # Floowo
-Fluid simulation written in python
+Fluid simulation
