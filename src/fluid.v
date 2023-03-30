@@ -28,6 +28,11 @@ fn (mut f Fluid) add_velocity(x int, y int, amount_x f32, amount_y f32) {
 	f.vy[idx] += amount_y
 }
 
+fn (mut f Fluid) diffuse(b int, x []f32, x0 []f32, diff f32) {
+	a := f.dt * diff * (size - 2) * (size - 2)
+	linear_solve(b, x, x0, a, 1 + 6 * a)
+}
+
 fn new_fluid(dt f32, diffusion f32, viscosity f32) Fluid {
 	mut s := []f32{}
 	mut density := []f32{}
@@ -45,5 +50,18 @@ fn new_fluid(dt f32, diffusion f32, viscosity f32) Fluid {
 		vy: vy
 		vx0: vx0
 		vy0: vy0
+	}
+}
+
+// not working yet, need to define set_bound
+fn linear_solve (b int, x []f32, x0 []f32, a f32, c f32) {
+	c_recip := 1.0 / c
+	for k := 0; k < 20; k++ {
+		for j := 1; j < size - 1; j++ {
+			for i := 1; i < size - 1; i++ {
+				x[i + size * j] = (x0[i + size * j] + a * (x[i + 1 + size * j] + x[i - 1 + size * j] + x[i + size * (j + 1)] + x[i + size * (j - 1)])) * c_recip
+			}
+		}
+		set_bnd(b, x)
 	}
 }
