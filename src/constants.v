@@ -11,4 +11,7 @@ const (
 
 	iter = 10
 
+	// Simulation parameters (probably not staying in const as I want to be able to change them)
+	diffusion = 0.5
+
 )
