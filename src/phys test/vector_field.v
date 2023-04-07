@@ -14,6 +14,7 @@ struct App {
 	mut:
 		gg &gg.Context = unsafe { nil }
 		field Field
+		rotating bool = false
 }
 
 fn (mut app App) display() {
@@ -30,8 +31,7 @@ fn (mut app App) display() {
 fn frame(mut app App) {
 	app.gg.begin()
 	app.display()
-	app.field.point_at(app.gg.mouse_pos_x, app.gg.mouse_pos_y)
-	app.field.update()
+	app.field.update(app.rotating)
 	app.gg.end()
 }
 
@@ -39,6 +39,14 @@ fn click(x f32, y f32, btn gg.MouseButton, mut app App) {
 	if btn == .left {
 		println("Left click at $x, $y")
 		app.field.point_at(x, y)
+	}
+}
+
+fn keydown(code gg.KeyCode, mod gg.Modifier, mut app App) {
+	if code == gg.KeyCode.space {
+		app.rotating = !app.rotating
+	} else if code == gg.KeyCode.enter {
+		app.field = init_field()
 	}
 }
 
@@ -57,6 +65,7 @@ fn main() {
 		resizable: false
 		window_title: 'vector fields'
 		click_fn: click
+		keydown_fn: keydown
 	)
 
 	app.gg.run()
