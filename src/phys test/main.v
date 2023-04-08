@@ -14,7 +14,6 @@ struct App {
 	mut:
 		gg &gg.Context = unsafe { nil }
 		field Field
-		rotating bool = false
 }
 
 fn (mut app App) display() {
@@ -23,7 +22,8 @@ fn (mut app App) display() {
 			ang := app.field.angles[x][y]
 			px := x * cell_size + cell_size / 2
 			py := y * cell_size + cell_size / 2
-			app.gg.draw_line(px, py, f32(px + cell_size / 2 * math.cos(ang)), f32(py + cell_size / 2 * math.sin(ang)), gx.white)
+			len := app.field.lenghts[x][y]
+			app.gg.draw_line(px, py, f32(px + len * math.cos(ang)), f32(py + len * math.sin(ang)), gx.white)
 		}
 	}
 }
@@ -31,7 +31,7 @@ fn (mut app App) display() {
 fn frame(mut app App) {
 	app.gg.begin()
 	app.display()
-	app.field.update(app.rotating)
+	app.field.update()
 	app.gg.end()
 }
 
@@ -39,13 +39,14 @@ fn click(x f32, y f32, btn gg.MouseButton, mut app App) {
 	if btn == .left {
 		println("Left click at $x, $y")
 		app.field.point_at(x, y)
+	} else if btn == .right {
+		println("Right click at $x, $y")
+		app.field.rotate()
 	}
 }
 
 fn keydown(code gg.KeyCode, mod gg.Modifier, mut app App) {
-	if code == gg.KeyCode.space {
-		app.rotating = !app.rotating
-	} else if code == gg.KeyCode.enter {
+	if code == gg.KeyCode.enter {
 		app.field = init_field()
 	}
 }

@@ -7,5 +7,5 @@ const(
 	cell_amount = screen_size / cell_size
 
 	// physics parameters
-	influence_dist = 500
+	influence_dist = 200
 )
