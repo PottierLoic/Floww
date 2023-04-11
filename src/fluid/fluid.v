@@ -1,5 +1,7 @@
 module main
 
+import math
+
 struct Fluid {
 mut:
 	density []f32
@@ -27,52 +29,68 @@ fn (mut f Fluid) add_velocity(x int, y int, amount_x f32, amount_y f32) {
 	f.vel_y[idx] += amount_y
 }
 
-fn (mut f Fluid) diffuse(b int, mut x []f32, x0 []f32, diff f32) {
+fn (mut f Fluid) diffuse(b int, mut x []f32, x_0 []f32, diff f32) {
 	a := f.dt * diff * (cell_amount - 2) * (cell_amount - 2)
-	f.linear_solve(b, mut x, x0, a, 1 + 6 * a)
+	lin_solve(b, mut x, x_0, a, 1 + 6 * a)
 }
 
-fn (mut f Fluid) linear_solve(b int, mut x []f32, x0 []f32, a f32, c f32) {
-	c_recip := 1.0 / c
-	for k := 0; k < 20; k++ {
-		for j := 1; j < cell_amount - 1; j++ {
-			for i := 1; i < cell_amount - 1; i++ {
-				x[get_idx(i, j)] = (x0[get_idx(i, j)] + a * (x[get_idx(i + 1, j)] + x[get_idx(i - 1, j)] + x[get_idx(i, j + 1)] + x[get_idx(i, j - 1)])) * c_recip
-			}
-		}
-		f.set_bnd(b, mut x)
-	}
-}
-
-fn (mut f Fluid) set_bnd(b int, mut x []f32) {
-	for i := 1; i < cell_amount - 1; i++ {
-		if b == 2 {
-			x[get_idx(i, 0)] = -x[get_idx(i, 1)]
-			x[get_idx(i, cell_amount - 1)] = -x[get_idx(i, cell_amount - 2)]
-		} else {
-			x[get_idx(i, 0)] = x[get_idx(i, 1)]
-			x[get_idx(i, cell_amount - 1)] = x[get_idx(i, cell_amount - 2)]
+fn (mut f Fluid) project(mut vel_x []f32, mut vel_y []f32, mut p []f32, mut div []f32) {
+	for j := 1; j < cell_amount - 1; j++ {
+		for i := 1; i < cell_amount - 1; i++ {
+			div[get_idx(i, j)] = -0.5 * (vel_x[get_idx(i + 1, j)] - vel_x[get_idx(i - 1, j)] + vel_y[get_idx(i, j + 1)] - vel_y[get_idx(i, j - 1)]) / cell_amount
+			p[get_idx(i, j)] = 0
 		}
 	}
+	set_bnd(0, mut div)
+	set_bnd(0, mut p)
+	lin_solve(0, mut p, div, 1, 6)
 
 	for j := 1; j < cell_amount - 1; j++ {
-		if b == 1 {
-			x[get_idx(0, j)] = -x[get_idx(1, j)]
-			x[get_idx(cell_amount - 1, j)] = -x[get_idx(cell_amount - 2, j)]
-		} else {
-			x[get_idx(0, j)] = x[get_idx(1, j)]
-			x[get_idx(cell_amount - 1, j)] = x[get_idx(cell_amount - 2, j)]
+		for i := 1; i < cell_amount - 1; i++ {
+			vel_x[get_idx(i, j)] -= 0.5 * (p[get_idx(i + 1, j)] - p[get_idx(i - 1, j)]) * cell_amount
+			vel_y[get_idx(i, j)] -= 0.5 * (p[get_idx(i, j + 1)] - p[get_idx(i, j - 1)]) * cell_amount
 		}
 	}
-
-	x[get_idx(0, 0)] = 0.5 * (x[get_idx(1, 0)] + x[get_idx(0, 1)])
-	x[get_idx(0, cell_amount - 1)] = 0.5 * (x[get_idx(1, cell_amount - 1)] + x[get_idx(0, cell_amount - 2)])
-	x[get_idx(cell_amount - 1, 0)] = 0.5 * (x[get_idx(cell_amount - 2, 0)] + x[get_idx(cell_amount - 1, 1)])
-	x[get_idx(cell_amount - 1, cell_amount - 1)] = 0.5 * (x[get_idx(cell_amount - 2, cell_amount - 1)] + x[get_idx(cell_amount - 1, cell_amount - 2)])
+	set_bnd(1, mut vel_x)
+	set_bnd(2, mut vel_y)
 }
 
-fn (mut f Fluid) step () {
-	f.diffuse(0, mut f.s, f.density, f.visc)
+fn (mut f Fluid) advect(b int, mut d []f32, d_0 []f32, vel_x []f32, vel_y []f32) {
+	dt0 := f.dt * (cell_amount - 2)
+	for j := 1; j < cell_amount - 1; j++ {
+		for i := 1; i < cell_amount - 1; i++ {
+			mut x := i - dt0 * vel_x[get_idx(i, j)]
+			mut y := j - dt0 * vel_y[get_idx(i, j)]
+			if x < 0.5 {
+				x = 0.5
+			}
+			if x > cell_amount + 0.5 {
+				x = cell_amount + 0.5
+			}
+			i0 := int(math.floor(x))
+			i1 := i0 + 1
+			if y < 0.5 {
+				y = 0.5
+			}
+			if y > cell_amount + 0.5 {
+				y = cell_amount + 0.5
+			}
+			j0 := int(math.floor(y))
+			j1 := j0 + 1
+			s1 := x - i0
+			s0 := 1 - s1
+			t1 := y - j0
+			t0 := 1 - t1
+			d[get_idx(i, j)] = s0 * (t0 * d_0[get_idx(i0, j0)] + t1 * d_0[get_idx(i0, j1)]) + s1 * (t0 * d_0[get_idx(i1, j0)] + t1 * d_0[get_idx(i1, j1)])
+		}
+	}
+	set_bnd(b, mut d)
+}
+
+ 
+
+fn (mut f Fluid) step() {
+	f.diffuse(0, mut f.s, f.density, f.diff)
 }
 
 fn init_fluid(dt f32, diffusion f32, viscosity f32) Fluid {
@@ -106,4 +124,42 @@ fn init_fluid(dt f32, diffusion f32, viscosity f32) Fluid {
 
 fn get_idx(x int, y int) int {
 	return x / cell_size + y / cell_size * cell_amount
+}
+
+fn lin_solve(b int, mut x []f32, x_0 []f32, a f32, c f32) {
+	c_recip := 1.0 / c
+	for k := 0; k < 20; k++ {
+		for j := 1; j < cell_amount - 1; j++ {
+			for i := 1; i < cell_amount - 1; i++ {
+				x[get_idx(i, j)] = (x_0[get_idx(i, j)] + a * (x[get_idx(i + 1, j)] + x[get_idx(i - 1, j)] + x[get_idx(i, j + 1)] + x[get_idx(i, j - 1)])) * c_recip
+			}
+		}
+		set_bnd(b, mut x)
+	}
+}
+
+fn set_bnd(b int, mut x []f32) {
+	for i := 1; i < cell_amount - 1; i++ {
+		if b == 2 {
+			x[get_idx(i, 0)] = -x[get_idx(i, 1)]
+			x[get_idx(i, cell_amount - 1)] = -x[get_idx(i, cell_amount - 2)]
+		} else {
+			x[get_idx(i, 0)] = x[get_idx(i, 1)]
+			x[get_idx(i, cell_amount - 1)] = x[get_idx(i, cell_amount - 2)]
+		}
+	}
+	for j := 1; j < cell_amount - 1; j++ {
+		if b == 1 {
+			x[get_idx(0, j)] = -x[get_idx(1, j)]
+			x[get_idx(cell_amount - 1, j)] = -x[get_idx(cell_amount - 2, j)]
+		} else {
+			x[get_idx(0, j)] = x[get_idx(1, j)]
+			x[get_idx(cell_amount - 1, j)] = x[get_idx(cell_amount - 2, j)]
+		}
+	}
+
+	x[get_idx(0, 0)] = 0.5 * (x[get_idx(1, 0)] + x[get_idx(0, 1)])
+	x[get_idx(0, cell_amount - 1)] = 0.5 * (x[get_idx(1, cell_amount - 1)] + x[get_idx(0, cell_amount - 2)])
+	x[get_idx(cell_amount - 1, 0)] = 0.5 * (x[get_idx(cell_amount - 2, 0)] + x[get_idx(cell_amount - 1, 1)])
+	x[get_idx(cell_amount - 1, cell_amount - 1)] = 0.5 * (x[get_idx(cell_amount - 2, cell_amount - 1)] + x[get_idx(cell_amount - 1, cell_amount - 2)])
 }

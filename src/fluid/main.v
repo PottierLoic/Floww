@@ -24,7 +24,6 @@ fn (mut app App) display() {
 fn frame(mut app App) {
 	app.gg.begin()
 	app.display()
-	app.fluid.step()
 	app.gg.end()
 }
 
