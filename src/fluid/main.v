@@ -23,6 +23,7 @@ fn (mut app App) display() {
 
 fn frame(mut app App) {
 	app.gg.begin()
+	app.fluid.step()
 	app.display()
 	app.gg.end()
 }
