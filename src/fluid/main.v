@@ -15,7 +15,7 @@ fn (mut app App) display() {
 		y := idx / cell_amount
 		if app.fluid.density[idx] > 0 {
 			density := app.fluid.density[idx]
-			app.gg.draw_rect(x*cell_size, y*cell_size, cell_size, cell_size, gx.rgb(u8(255*density), u8(255*density), u8(255*density)))
+			app.gg.draw_rect_filled(x*cell_size, y*cell_size, cell_size, cell_size, gx.rgb(u8(255*density), u8(255*density), u8(255*density)))
 		}
 	}
 }
@@ -46,7 +46,7 @@ fn main() {
 		height: size
 		create_window: true
 		resizable: false
-		window_title: 'Floowo'
+		window_title: 'Flowoo'
 		click_fn: click
 	)
 
