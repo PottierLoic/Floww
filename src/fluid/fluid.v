@@ -89,18 +89,40 @@ fn (mut f Fluid) advect(b int, mut d []f32, d_0 []f32, vel_x []f32, vel_y []f32)
 
 
 fn (mut f Fluid) step() {
-	f.diffuse(1, mut f.vel_x_0, f.vel_x, f.visc)
-	f.diffuse(2, mut f.vel_y_0, f.vel_y, f.visc)
+	println("step:\n")
+	// f.diffuse(1, mut f.vel_x_0, f.vel_x, f.visc)
+	// f.diffuse(2, mut f.vel_y_0, f.vel_y, f.visc)
 
-	f.project(mut f.vel_x_0, mut f.vel_y_0, mut f.vel_x, mut f.vel_y)
+	// f.project(mut f.vel_x_0, mut f.vel_y_0, mut f.vel_x, mut f.vel_y)
 
-	f.advect(1, mut f.vel_x, f.vel_x_0, f.vel_x_0, f.vel_y_0)
-	f.advect(2, mut f.vel_y, f.vel_y_0, f.vel_x_0, f.vel_y_0)
+	// f.advect(1, mut f.vel_x, f.vel_x_0, f.vel_x_0, f.vel_y_0)
+	// f.advect(2, mut f.vel_y, f.vel_y_0, f.vel_x_0, f.vel_y_0)
 
-	f.project(mut f.vel_x, mut f.vel_y, mut f.vel_x_0, mut f.vel_y_0)
+	// f.project(mut f.vel_x, mut f.vel_y, mut f.vel_x_0, mut f.vel_y_0)
 
 	f.diffuse(0, mut f.s, f.density, f.diff)
-	f.advect(0, mut f.density, f.s, f.vel_x, f.vel_y)
+	f.density = f.s
+	// f.advect(0, mut f.density, f.s, f.vel_x, f.vel_y)
+	f.print_density()
+
+}
+
+fn (f Fluid) print_density() {
+	for i in 0..cell_amount {
+		for j in 0..cell_amount {
+			print("${f.density[i * cell_amount + j]} ")
+		}
+		println("")
+	}
+}
+
+fn (f Fluid) print_velocity() {
+	for i in 0..cell_amount {
+		for j in 0..cell_amount {
+			print("${f.vel_x[i * cell_amount + j]} ")
+		}
+		println("")
+	}
 }
 
 fn init_fluid(dt f32, diffusion f32, viscosity f32) Fluid {

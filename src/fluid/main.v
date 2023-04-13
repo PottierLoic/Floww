@@ -19,14 +19,13 @@ fn (mut app App) display() {
 		if app.fluid.density[idx] > 0 {
 			density := app.fluid.density[idx]
 			app.gg.draw_rect_filled(x * cell_size, y * cell_size, cell_size, cell_size,
-				gx.rgb(u8(255 * density), u8(255 * density), u8(255 * density)))
+				gx.rgb(u8(255 * density/100), u8(255 * density/100), u8(255 * density/100)))
 		}
 	}
 }
 
 fn frame(mut app App) {
 	app.gg.begin()
-	app.fluid.step()
 	app.display()
 	app.gg.end()
 }
@@ -39,11 +38,13 @@ fn click(x f32, y f32, btn gg.MouseButton, mut app App) {
 				xx := i * cell_size
 				yy := j * cell_size
 				if x + xx >= 0 && x + xx < size && y + yy >= 0 && y + yy < size {
-					app.fluid.add_density(int(x + xx), int(y + yy), 0.1)
+					app.fluid.add_density(int(x + xx), int(y + yy), 20)
 					app.fluid.add_velocity(int(x + xx), int(y + yy), f32(math.cos(angle)), f32(math.sin(angle)))
 				}
 			}
 		}
+	} else if btn == .right {
+		app.fluid.step()
 	}
 }
 
