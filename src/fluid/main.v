@@ -3,10 +3,13 @@ module main
 import gg
 import gx
 
+import math
+import rand
+
 struct App {
 mut:
 	gg    &gg.Context = unsafe { nil }
-	fluid Fluid
+	fluid Fluid = init_fluid(0.2, 0, 0.0000001)
 }
 
 fn (mut app App) display() {
@@ -30,15 +33,23 @@ fn frame(mut app App) {
 
 fn click(x f32, y f32, btn gg.MouseButton, mut app App) {
 	if btn == .left {
-		println('Left click at ${x}, ${y}')
-		app.fluid.add_density(int(x), int(y), 0.1)
+		mut angle := rand.f32() * math.pi * 2
+		for i in -1..2 {
+			for j in -1..2 {
+				xx := i * cell_size
+				yy := j * cell_size
+				if x + xx >= 0 && x + xx < size && y + yy >= 0 && y + yy < size {
+					app.fluid.add_density(int(x + xx), int(y + yy), 0.1)
+					app.fluid.add_velocity(int(x + xx), int(y + yy), f32(math.cos(angle)), f32(math.sin(angle)))
+				}
+			}
+		}
 	}
 }
 
 fn main() {
 	mut app := App{
 		gg: 0
-		fluid: init_fluid(0, 0, 0)
 	}
 	app.gg = gg.new_context(
 		bg_color: background_color
@@ -51,6 +62,5 @@ fn main() {
 		window_title: 'Flowoo'
 		click_fn: click
 	)
-
 	app.gg.run()
 }
