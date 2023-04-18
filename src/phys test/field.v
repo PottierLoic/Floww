@@ -29,8 +29,8 @@ fn (mut f Field) modulo_angles() {
 }
 
 fn (mut f Field) point_at(x f32, y f32) {
-	for xx := 0; xx < size; xx++ {
-		for yy := 0; yy < size; yy++ {
+	for xx := 0; xx < screen_size; xx++ {
+		for yy := 0; yy < screen_size; yy++ {
 			idxx, idyy := get_index(f32(xx), f32(yy))
 
 			xy_angle := f32(math.atan2(f32(yy - y), f32(xx - x)))
@@ -39,29 +39,28 @@ fn (mut f Field) point_at(x f32, y f32) {
 			gap := xy_angle - f.angles[idxx][idyy]
 			if percent > 0 {
 				f.angles[idxx][idyy] += gap * percent
-				f.lenghts[idxx][idyy] = (cell_size/2)*percent
+				//f.lenghts[idxx][idyy] = (cell_size/2)*percent
 			} 
-			if f.lenghts[idxx][idyy] < 2 {
-				f.lenghts[idxx][idyy] = 2
-			}
+			// if f.lenghts[idxx][idyy] < 2 {
+			// 	f.lenghts[idxx][idyy] = 2
+			// }
 		}
 	}
 }
 
 fn init_field() Field {
-	mut angles := [][]f32{}
+	// mut angles := [][]f32{}
 	mut lenghts := [][]f32{}
 
 	for x := 0; x < cell_amount; x++ {
-		mut row := []f32{}
 		mut row2 := []f32{}
 		for y := 0; y < cell_amount; y++ {
-			row << f32(0)
-			row2 << f32(2)
+			row2 << f32(cell_size/2)
 		}
-		angles << row
 		lenghts << row2
 	}
+
+	mut angles := fractal_perlin_array(cell_amount, cell_amount, 10, 8, 0.35, 2)
 
 	return Field{
 		angles: angles

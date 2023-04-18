@@ -5,11 +5,6 @@ import math
 import gg
 import gx
 
-const (
-	size = 800
-	background_color = gx.black
-)
-
 struct App {
 	mut:
 		gg &gg.Context = unsafe { nil }
@@ -60,8 +55,8 @@ fn main() {
 		bg_color: background_color
 		frame_fn: frame
 		user_data: &app
-		width: size
-		height: size
+		width: screen_size
+		height: screen_size
 		create_window: true
 		resizable: false
 		window_title: 'vector fields'
